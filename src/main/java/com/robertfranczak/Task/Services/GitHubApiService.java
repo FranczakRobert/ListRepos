@@ -1,5 +1,9 @@
 package com.robertfranczak.Task.Services;
 
+import com.robertfranczak.Task.Model.RepoResponseData;
+
+import java.util.List;
+
 public interface GitHubApiService {
-    void getRepositoriesDetails(String username);
+    List<RepoResponseData> getRepositoriesDetails(String username);
 }
