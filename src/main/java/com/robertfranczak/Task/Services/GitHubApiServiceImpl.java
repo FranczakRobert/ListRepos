@@ -10,9 +10,9 @@ import java.util.List;
 
 @Service
 public class GitHubApiServiceImpl implements GitHubApiService {
-    private List<RepoResponseData> repoResponseData = new ArrayList<>();
+    private final List<RepoResponseData> repoResponseData = new ArrayList<>();
 
-   private HttpHeaders headers = new HttpHeaders();
+   private final HttpHeaders headers = new HttpHeaders();
 
    public GitHubApiServiceImpl() {
        headers.add("User-Agent", "IReallyWantThisJob");
