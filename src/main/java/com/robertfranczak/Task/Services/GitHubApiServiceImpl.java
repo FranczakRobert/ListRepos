@@ -25,7 +25,6 @@ public class GitHubApiServiceImpl implements GitHubApiService {
    public GitHubApiServiceImpl() {
        headers.add("User-Agent", "IReallyWantThisJob");
        headers.add("Accept", "application/json");
-       headers.add("Authorization", "Bearer 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");
    }
 
    @Override
