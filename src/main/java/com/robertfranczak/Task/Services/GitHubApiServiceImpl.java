@@ -17,8 +17,7 @@ import java.util.Map;
 
 @Service
 public class GitHubApiServiceImpl implements GitHubApiService {
-    private final List<RepoResponseData> repoResponseData = new ArrayList<>();
-
+    private List<RepoResponseData> repoResponseData;
    private final HttpHeaders headers = new HttpHeaders();
 
    public GitHubApiServiceImpl() {
@@ -28,21 +27,30 @@ public class GitHubApiServiceImpl implements GitHubApiService {
 
    @Override
     public  List<RepoResponseData> getRepositoriesDetails(String username) {
+       repoResponseData = new ArrayList<>();
+
+       CompleteResponseData completeResponseData = new CompleteResponseData(repoResponseData);
+
 
         HttpEntity<String> request = new HttpEntity<>("parameters", headers);
 
         RestTemplate rest = new RestTemplate();
 
-        ResponseEntity<String> responseEntity = rest.exchange(
-                "https://api.github.com/users/" + username + "/repos",
-                HttpMethod.GET,
-                request,
-                String.class);
-        // Todo  HANDLE THIS
-       CompleteResponseData completeResponseData = new CompleteResponseData(repoResponseData,"DUMMY",responseEntity.getStatusCode());
+        try {
+            ResponseEntity<String> responseEntity = rest.exchange(
+                    "https://api.github.com/users/" + username + "/repos",
+                    HttpMethod.GET,
+                    request,
+                    String.class);
 
-        if (responseEntity.getStatusCode() == HttpStatus.OK)
-            fetchBranchesAndSHA(responseEntity);
+            if (responseEntity.getStatusCode() == HttpStatus.OK)
+                fetchBranchesAndSHA(responseEntity);
+
+        } catch (Exception e) {
+            // Handle other exceptions
+            System.out.println(e.getMessage());
+            repoResponseData.add(new RepoResponseData("DUMMY",HttpStatus.NOT_FOUND));
+        }
 
         return completeResponseData.getRepoResponseData();
     }

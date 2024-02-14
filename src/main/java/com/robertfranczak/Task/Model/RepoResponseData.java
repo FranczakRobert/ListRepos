@@ -1,17 +1,48 @@
 package com.robertfranczak.Task.Model;
 
-import java.util.HashMap;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import org.springframework.http.HttpStatusCode;
+
 import java.util.Map;
 
 public class RepoResponseData {
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private String repositoryName;
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private String ownerLogin;
-    private Map<String,String> branchName = new HashMap<>();
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private Map<String,String> branchName;
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private String message;
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private HttpStatusCode status;
 
     public RepoResponseData(String repositoryName, String ownerLogin, Map<String, String> branchName) {
         this.repositoryName = repositoryName;
         this.ownerLogin = ownerLogin;
         this.branchName = branchName;
+    }
+
+    public RepoResponseData(String message, HttpStatusCode status) {
+        this.status = status;
+        this.message = message;
+
+    }
+
+    public HttpStatusCode getStatus() {
+        return status;
+    }
+
+    public void setStatus(HttpStatusCode status) {
+        this.status = status;
+    }
+
+    public String getMessage() {
+        return message;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
     }
 
     public String getRepositoryName() {
