@@ -2,7 +2,7 @@ package com.robertfranczak.Task.Services;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.robertfranczak.Task.Exceptions.ApiException;
+import com.robertfranczak.Task.Model.ApiException;
 import com.robertfranczak.Task.Model.CompleteResponseData;
 import com.robertfranczak.Task.Model.RepoResponseData;
 import com.robertfranczak.Task.POJO.BranchWrapper;
@@ -52,7 +52,7 @@ public class GitHubApiServiceImpl implements GitHubApiService {
             repoResponseData.add(new RepoResponseData(error.message(),error.status()));
         }
 
-        return completeResponseData.getRepoResponseData();
+        return completeResponseData.repoResponseData();
     }
 
     private void fetchBranchesAndSHA(ResponseEntity<String> responseEntity) {
@@ -70,7 +70,7 @@ public class GitHubApiServiceImpl implements GitHubApiService {
 
                 if (element.getFork().equals("false"))
                     responseEntity = rest.exchange(
-                            "https://api.github.com/repos/" + element.getOwnerLogin() + "/" + element.getRepositoryName() + "/branches",
+                            "https://api.github.com/repos/" + element.getOwner().getLogin() + "/" + element.getRepositoryName() + "/branches",
                             HttpMethod.GET,
                             request,
                             String.class);
@@ -98,9 +98,9 @@ public class GitHubApiServiceImpl implements GitHubApiService {
     private void createResponse(NameWrapper element, List<BranchWrapper> obj) {
         Map<String, String> map = new HashMap<>();
         for (BranchWrapper branchWrapper : obj) {
-            map.put(branchWrapper.getRepositoryName(), branchWrapper.getCommitWrapper().getSha());
+            map.put(branchWrapper.getName(), branchWrapper.getCommit().getSha());
         }
-        this.repoResponseData.add(new RepoResponseData(element.getRepositoryName(), element.getOwnerLogin(), map));
+        this.repoResponseData.add(new RepoResponseData(element.getRepositoryName(), element.getOwner().getLogin(), map));
     }
 
 }

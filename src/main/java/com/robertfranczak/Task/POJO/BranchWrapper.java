@@ -3,7 +3,13 @@ package com.robertfranczak.Task.POJO;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
+@Data
+@Setter
+@Getter
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class BranchWrapper {
     @JsonProperty("name")
@@ -11,20 +17,4 @@ public class BranchWrapper {
 
     @JsonProperty("commit")
     private CommitWrapper commit;
-
-    public String getRepositoryName() {
-        return name;
-    }
-
-    public void setRepositoryName(String repositoryName) {
-        this.name = repositoryName;
-    }
-
-    public CommitWrapper getCommitWrapper() {
-        return commit;
-    }
-
-    public void setCommitWrapper(CommitWrapper commit) {
-        this.commit = commit;
-    }
 }

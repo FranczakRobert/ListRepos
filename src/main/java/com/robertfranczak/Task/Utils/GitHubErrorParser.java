@@ -1,6 +1,6 @@
 package com.robertfranczak.Task.Utils;
 
-import com.robertfranczak.Task.Exceptions.ApiException;
+import com.robertfranczak.Task.Model.ApiException;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
