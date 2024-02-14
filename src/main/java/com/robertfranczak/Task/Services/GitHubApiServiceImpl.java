@@ -5,8 +5,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.robertfranczak.Task.Model.ApiException;
 import com.robertfranczak.Task.Model.CompleteResponseData;
 import com.robertfranczak.Task.Model.RepoResponseData;
-import com.robertfranczak.Task.POJO.BranchWrapper;
-import com.robertfranczak.Task.POJO.NameWrapper;
+import com.robertfranczak.Task.Model.DTO.BranchDTO;
+import com.robertfranczak.Task.Model.DTO.NameDTO;
 import com.robertfranczak.Task.Utils.GitHubErrorParser;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
@@ -65,12 +65,12 @@ public class GitHubApiServiceImpl implements GitHubApiService {
         ObjectMapper objectMapper = new ObjectMapper();
 
         try {
-            for (NameWrapper element : objectMapper.readValue(responseBody, new TypeReference<List<NameWrapper>>() {
+            for (NameDTO element : objectMapper.readValue(responseBody, new TypeReference<List<NameDTO>>() {
             })) {
-
-                if (element.getFork().equals("false"))
+                System.out.println("https://api.github.com/repos/" + element.owner().login() + "/" + element.repositoryName() + "/branches");
+                if (element.fork().equals("false"))
                     responseEntity = rest.exchange(
-                            "https://api.github.com/repos/" + element.getOwner().getLogin() + "/" + element.getRepositoryName() + "/branches",
+                            "https://api.github.com/repos/" + element.owner().login() + "/" + element.repositoryName() + "/branches",
                             HttpMethod.GET,
                             request,
                             String.class);
@@ -80,7 +80,7 @@ public class GitHubApiServiceImpl implements GitHubApiService {
 
                 try {
                     if (responseEntity.getStatusCode() == HttpStatus.OK) {
-                        List<BranchWrapper> obj = objectMapper.readValue(result, new TypeReference<>() {
+                        List<BranchDTO> obj = objectMapper.readValue(result, new TypeReference<>() {
                         });
 
                         createResponse(element, obj);
@@ -95,12 +95,12 @@ public class GitHubApiServiceImpl implements GitHubApiService {
         }
     }
 
-    private void createResponse(NameWrapper element, List<BranchWrapper> obj) {
+    private void createResponse(NameDTO element, List<BranchDTO> obj) {
         Map<String, String> map = new HashMap<>();
-        for (BranchWrapper branchWrapper : obj) {
-            map.put(branchWrapper.getName(), branchWrapper.getCommit().getSha());
+        for (BranchDTO branchDTO : obj) {
+            map.put(branchDTO.name(), branchDTO.commit().sha());
         }
-        this.repoResponseData.add(new RepoResponseData(element.getRepositoryName(), element.getOwner().getLogin(), map));
+        this.repoResponseData.add(new RepoResponseData(element.repositoryName(), element.owner().login(), map));
     }
 
 }
