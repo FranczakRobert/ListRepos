@@ -1,8 +1,6 @@
 package com.robertfranczak.Task.Exceptions;
 
-import org.springframework.http.HttpStatus;
-
-record ApiException (
-        HttpStatus status,
+public record ApiException (
+        int status,
         String message
 ){}

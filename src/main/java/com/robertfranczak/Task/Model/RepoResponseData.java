@@ -1,7 +1,6 @@
 package com.robertfranczak.Task.Model;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import org.springframework.http.HttpStatusCode;
 
 import java.util.Map;
 
@@ -15,7 +14,7 @@ public class RepoResponseData {
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private String message;
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    private HttpStatusCode status;
+    private Integer status;
 
     public RepoResponseData(String repositoryName, String ownerLogin, Map<String, String> branchName) {
         this.repositoryName = repositoryName;
@@ -23,17 +22,17 @@ public class RepoResponseData {
         this.branchName = branchName;
     }
 
-    public RepoResponseData(String message, HttpStatusCode status) {
+    public RepoResponseData(String message, Integer status) {
         this.status = status;
         this.message = message;
 
     }
 
-    public HttpStatusCode getStatus() {
+    public Integer getStatus() {
         return status;
     }
 
-    public void setStatus(HttpStatusCode status) {
+    public void setStatus(Integer status) {
         this.status = status;
     }
 

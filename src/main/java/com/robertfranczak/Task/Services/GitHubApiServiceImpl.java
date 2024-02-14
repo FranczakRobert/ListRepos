@@ -2,10 +2,12 @@ package com.robertfranczak.Task.Services;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.robertfranczak.Task.Exceptions.ApiException;
 import com.robertfranczak.Task.Model.CompleteResponseData;
 import com.robertfranczak.Task.Model.RepoResponseData;
 import com.robertfranczak.Task.POJO.BranchWrapper;
 import com.robertfranczak.Task.POJO.NameWrapper;
+import com.robertfranczak.Task.Utils.GitHubErrorParser;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -23,6 +25,7 @@ public class GitHubApiServiceImpl implements GitHubApiService {
    public GitHubApiServiceImpl() {
        headers.add("User-Agent", "IReallyWantThisJob");
        headers.add("Accept", "application/json");
+       headers.add("Authorization", "Bearer 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");
    }
 
    @Override
@@ -30,7 +33,6 @@ public class GitHubApiServiceImpl implements GitHubApiService {
        repoResponseData = new ArrayList<>();
 
        CompleteResponseData completeResponseData = new CompleteResponseData(repoResponseData);
-
 
         HttpEntity<String> request = new HttpEntity<>("parameters", headers);
 
@@ -47,9 +49,8 @@ public class GitHubApiServiceImpl implements GitHubApiService {
                 fetchBranchesAndSHA(responseEntity);
 
         } catch (Exception e) {
-            // Handle other exceptions
-            System.out.println(e.getMessage());
-            repoResponseData.add(new RepoResponseData("DUMMY",HttpStatus.NOT_FOUND));
+            ApiException error = GitHubErrorParser.getInstance().extractStatusAndMessageError(e.getMessage());
+            repoResponseData.add(new RepoResponseData(error.message(),error.status()));
         }
 
         return completeResponseData.getRepoResponseData();
@@ -80,7 +81,7 @@ public class GitHubApiServiceImpl implements GitHubApiService {
 
                 try {
                     if (responseEntity.getStatusCode() == HttpStatus.OK) {
-                        List<BranchWrapper> obj = objectMapper.readValue(result, new TypeReference<List<BranchWrapper>>() {
+                        List<BranchWrapper> obj = objectMapper.readValue(result, new TypeReference<>() {
                         });
 
                         createResponse(element, obj);
@@ -91,7 +92,6 @@ public class GitHubApiServiceImpl implements GitHubApiService {
                 }
             }
         } catch (Exception e) {
-
             e.printStackTrace();
         }
     }
