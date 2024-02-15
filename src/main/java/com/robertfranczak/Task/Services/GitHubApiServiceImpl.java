@@ -2,12 +2,11 @@ package com.robertfranczak.Task.Services;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.robertfranczak.Task.Model.ApiException;
+import com.robertfranczak.Task.Exceptions.NotFoundException;
 import com.robertfranczak.Task.Model.CompleteResponseData;
-import com.robertfranczak.Task.Model.RepoResponseData;
 import com.robertfranczak.Task.Model.DTO.BranchDTO;
 import com.robertfranczak.Task.Model.DTO.NameDTO;
-import com.robertfranczak.Task.Utils.GitHubErrorParser;
+import com.robertfranczak.Task.Model.RepoResponseData;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -48,8 +47,8 @@ public class GitHubApiServiceImpl implements GitHubApiService {
                 fetchBranchesAndSHA(responseEntity);
 
         } catch (Exception e) {
-            ApiException error = GitHubErrorParser.getInstance().extractStatusAndMessageError(e.getMessage());
-            repoResponseData.add(new RepoResponseData(error.message(),error.status()));
+//            ApiException error = GitHubErrorParser.getInstance().extractStatusAndMessageError(e.getMessage());
+            throw new NotFoundException(e.getMessage());
         }
 
         return completeResponseData.repoResponseData();
