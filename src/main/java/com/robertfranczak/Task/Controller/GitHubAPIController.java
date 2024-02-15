@@ -19,6 +19,7 @@ public class GitHubAPIController {
     private final GitHubApiService gitHubApiService;
 
     //Todo ----->  JSON Format:  Exceptionhandler : zmienic Magic numbers/Strings : Lista z branchami i SHA : dokumentacja : Testy
+
     @GetMapping("/{username}")
     public List<RepoResponseData> getGitHubUserDetails(
             @PathVariable String username) {

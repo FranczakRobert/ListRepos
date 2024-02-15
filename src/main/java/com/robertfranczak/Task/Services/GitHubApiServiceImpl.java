@@ -7,7 +7,12 @@ import com.robertfranczak.Task.Model.CompleteResponseData;
 import com.robertfranczak.Task.Model.DTO.BranchDTO;
 import com.robertfranczak.Task.Model.DTO.NameDTO;
 import com.robertfranczak.Task.Model.RepoResponseData;
-import org.springframework.http.*;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.env.Environment;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -18,77 +23,57 @@ import java.util.Map;
 
 @Service
 public class GitHubApiServiceImpl implements GitHubApiService {
+    @Autowired
+    private Environment env;
     private List<RepoResponseData> repoResponseData;
-   private final HttpHeaders headers = new HttpHeaders();
+    private final HttpHeaders headers = new HttpHeaders();
 
    public GitHubApiServiceImpl() {
        headers.add("User-Agent", "IReallyWantThisJob");
        headers.add("Accept", "application/json");
    }
-
    @Override
     public  List<RepoResponseData> getRepositoriesDetails(String username) {
        repoResponseData = new ArrayList<>();
-
-       CompleteResponseData completeResponseData = new CompleteResponseData(repoResponseData);
-
-        HttpEntity<String> request = new HttpEntity<>("parameters", headers);
-
-        RestTemplate rest = new RestTemplate();
-
+        CompleteResponseData completeResponseData = new CompleteResponseData(repoResponseData);
         try {
-            ResponseEntity<String> responseEntity = rest.exchange(
-                    "https://api.github.com/users/" + username + "/repos",
-                    HttpMethod.GET,
-                    request,
-                    String.class);
+            String responseBody = getResponse(
+                    env.getProperty("data.gitHubApi.url")
+                    + env.getProperty("data.gitHubApi.users")
+                    + username + env.getProperty("data.gitHubApi.repos"));
 
-            if (responseEntity.getStatusCode() == HttpStatus.OK)
-                fetchBranchesAndSHA(responseEntity);
-
+            fetchBranchesAndSHA(responseBody);
         } catch (Exception e) {
-//            ApiException error = GitHubErrorParser.getInstance().extractStatusAndMessageError(e.getMessage());
             throw new NotFoundException(e.getMessage());
         }
-
         return completeResponseData.repoResponseData();
     }
 
-    private void fetchBranchesAndSHA(ResponseEntity<String> responseEntity) {
-        String responseBody = responseEntity.getBody();
-
-        HttpEntity<String> request = new HttpEntity<>("parameters", headers);
-
-        RestTemplate rest = new RestTemplate();
-
+    private void fetchBranchesAndSHA(String responseBody) {
         ObjectMapper objectMapper = new ObjectMapper();
-
         try {
-            for (NameDTO element : objectMapper.readValue(responseBody, new TypeReference<List<NameDTO>>() {
-            })) {
-                System.out.println("https://api.github.com/repos/" + element.owner().login() + "/" + element.repositoryName() + "/branches");
-                if (element.fork().equals("false"))
-                    responseEntity = rest.exchange(
-                            "https://api.github.com/repos/" + element.owner().login() + "/" + element.repositoryName() + "/branches",
-                            HttpMethod.GET,
-                            request,
-                            String.class);
-
-                String result = responseEntity.getBody();
-                objectMapper = new ObjectMapper();
-
-                try {
-                    if (responseEntity.getStatusCode() == HttpStatus.OK) {
-                        List<BranchDTO> obj = objectMapper.readValue(result, new TypeReference<>() {
-                        });
-
-                        createResponse(element, obj);
-                    }
-                } catch (Exception e) {
-                    //IMPLEMENT
-                    e.printStackTrace();
+            for (NameDTO element : objectMapper.readValue(responseBody, new TypeReference<List<NameDTO>>() {})) {
+                if (element.fork().equals("false")) {
+                    String result = getResponse(env.getProperty("data.gitHubApi.url")
+                            + env.getProperty("data.gitHubApi.repos")
+                            + "/"
+                            + element.owner().login()
+                            + "/"
+                            + element.repositoryName()
+                            + env.getProperty("data.gitHubApi.branches"));
+                    processResult(result, element);
                 }
             }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void processResult(String result, NameDTO element) {
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            List<BranchDTO> obj = objectMapper.readValue(result, new TypeReference<>() {});
+            createResponse(element, obj);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -102,4 +87,14 @@ public class GitHubApiServiceImpl implements GitHubApiService {
         this.repoResponseData.add(new RepoResponseData(element.repositoryName(), element.owner().login(), map));
     }
 
+    private String getResponse(String apiCall) {
+        HttpEntity<String> request = new HttpEntity<>("parameters", headers);
+        RestTemplate rest = new RestTemplate();
+        ResponseEntity<String> responseEntity = rest.exchange(
+                apiCall,
+                HttpMethod.GET,
+                request,
+                String.class);
+        return responseEntity.getBody();
+    }
 }
