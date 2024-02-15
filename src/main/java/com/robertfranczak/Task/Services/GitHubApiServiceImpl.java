@@ -38,7 +38,6 @@ public class GitHubApiServiceImpl implements GitHubApiService {
        headers = new HttpHeaders();
        headers.add("User-Agent", "IReallyWantThisJob");
        headers.add("Accept", "application/json");
-       headers.add("Authorization","Bearer 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");
    }
 
     /**

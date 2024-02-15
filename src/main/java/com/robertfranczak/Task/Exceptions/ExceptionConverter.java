@@ -25,10 +25,17 @@ public class ExceptionConverter {
     /**
      * Extracts the error message from the exception message and set message variable to specific errorMessage.
      */
-    public void errorForNotFoundMessage() {
+    public void createNotFoundMsg() {
             String errorMessage = message.substring(message.indexOf("message\":\"") + 10);
             errorMessage = errorMessage.substring(0, errorMessage.indexOf("\""));
             message = errorMessage;
+    }
+
+    /**
+     * Create NotAcceptableHeader error message
+     */
+    public void createNotAcceptableHeader() {
+        message = "NotAcceptableHeader";
     }
 
     /**
