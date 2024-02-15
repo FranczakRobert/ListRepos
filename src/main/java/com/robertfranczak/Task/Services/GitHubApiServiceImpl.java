@@ -30,6 +30,8 @@ public class GitHubApiServiceImpl implements GitHubApiService {
    public GitHubApiServiceImpl() {
        headers.add("User-Agent", "IReallyWantThisJob");
        headers.add("Accept", "application/json");
+       headers.add("Authorization","Bearer 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");
+
 
    }
    @Override
@@ -65,6 +67,7 @@ public class GitHubApiServiceImpl implements GitHubApiService {
                                 + env.getProperty("data.gitHubApi.branches"));
                         processResult(result, element);
                     });
+
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -86,6 +89,7 @@ public class GitHubApiServiceImpl implements GitHubApiService {
                     tmp.add(new BranchDTO(ele.name(),ele.commit().sha()));
                 });
         this.repoResponseDatumDTOS.add(new RepoResponseDataDTO(element.repositoryName(), element.owner().login(), tmp));
+
     }
 
     private String getResponse(String apiCall) {

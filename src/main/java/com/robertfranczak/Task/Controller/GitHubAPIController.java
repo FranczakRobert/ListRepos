@@ -19,7 +19,6 @@ public class GitHubAPIController {
     private final GitHubApiService gitHubApiService;
 
     //Todo ----->  JSON Format: dokumentacja : Testy
-
     @GetMapping("/{username}")
     public List<RepoResponseDataDTO> getGitHubUserDetails(
             @PathVariable String username) {
