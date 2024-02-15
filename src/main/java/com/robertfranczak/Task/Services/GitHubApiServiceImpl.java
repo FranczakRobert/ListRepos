@@ -20,20 +20,34 @@ import org.springframework.web.client.RestTemplate;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * GitHubApiServiceImpl is a service class implementing the GitHubApiService interface.
+ * It is responsible for retrieving repository details from the GitHub API.
+ */
 @Service
 public class GitHubApiServiceImpl implements GitHubApiService {
     @Autowired
     private Environment env;
     private List<RepoResponseDataDTO> repoResponseDatumDTOS;
-    private final HttpHeaders headers = new HttpHeaders();
+    private final HttpHeaders headers;
 
+    /**
+     * Constructs a new GitHubApiServiceImpl and sets up the necessary HTTP headers.
+     */
    public GitHubApiServiceImpl() {
+       headers = new HttpHeaders();
        headers.add("User-Agent", "IReallyWantThisJob");
        headers.add("Accept", "application/json");
        headers.add("Authorization","Bearer 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");
-
-
    }
+
+    /**
+     * Retrieves details of repositories for a given GitHub user.
+     *
+     * @param username The username of the GitHub user whose repositories details are to be retrieved.
+     * @return A list of RepoResponseDataDTO objects representing the repositories details.
+     * @throws NotFoundException if an error occurs during the retrieval process.
+     */
    @Override
     public  List<RepoResponseDataDTO> getRepositoriesDetails(String username) {
        repoResponseDatumDTOS = new ArrayList<>();
@@ -51,6 +65,11 @@ public class GitHubApiServiceImpl implements GitHubApiService {
         return completeResponseData.repoResponseDatumDTOS();
     }
 
+    /**
+     * Fetches branch details and corresponding commit SHAs for each repository.
+     *
+     * @param responseBody The response body containing repository details in JSON format.
+     */
     private void fetchBranchesAndSHA(String responseBody) {
         ObjectMapper objectMapper = new ObjectMapper();
         try {
@@ -73,24 +92,6 @@ public class GitHubApiServiceImpl implements GitHubApiService {
         }
     }
 
-    private void processResult(String result, NameDTO element) {
-        try {
-            ObjectMapper objectMapper = new ObjectMapper();
-            List<BranchRequestDTO> obj = objectMapper.readValue(result, new TypeReference<>() {});
-            createResponse(element, obj);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    private void createResponse(NameDTO element, List<BranchRequestDTO> obj) {
-        List<BranchDTO> tmp = new ArrayList<>();
-        obj.forEach(ele -> {
-                    tmp.add(new BranchDTO(ele.name(),ele.commit().sha()));
-                });
-        this.repoResponseDatumDTOS.add(new RepoResponseDataDTO(element.repositoryName(), element.owner().login(), tmp));
-
-    }
 
     private String getResponse(String apiCall) {
         HttpEntity<String> request = new HttpEntity<>("parameters", headers);
@@ -101,5 +102,35 @@ public class GitHubApiServiceImpl implements GitHubApiService {
                 request,
                 String.class);
         return responseEntity.getBody();
+    }
+
+    /**
+     * Processes the result of fetching branch details and creates the response data.
+     *
+     * @param result The response containing branch details in JSON format.
+     * @param element The repository details represented by NameDTO.
+     */
+    private void processResult(String result, NameDTO element) {
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            List<BranchRequestDTO> obj = objectMapper.readValue(result, new TypeReference<>() {});
+            createResponse(element, obj);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Creates the response data containing repository name, owner login, and branch details, representing by RepoResponseDataDTO
+     * @param element The repository details.
+     * @param branchRequestDTO The list of branch details.
+     */
+    private void createResponse(NameDTO element, List<BranchRequestDTO> branchRequestDTO) {
+        List<BranchDTO> branchDTOList = new ArrayList<>();
+        branchRequestDTO.forEach(ele -> {
+            branchDTOList.add(new BranchDTO(ele.name(),ele.commit().sha()));
+        });
+        this.repoResponseDatumDTOS.add(new RepoResponseDataDTO(element.repositoryName(), element.owner().login(), branchDTOList));
+
     }
 }
