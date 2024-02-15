@@ -17,9 +17,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class GitHubApiServiceImpl implements GitHubApiService {
@@ -52,18 +52,19 @@ public class GitHubApiServiceImpl implements GitHubApiService {
     private void fetchBranchesAndSHA(String responseBody) {
         ObjectMapper objectMapper = new ObjectMapper();
         try {
-            for (NameDTO element : objectMapper.readValue(responseBody, new TypeReference<List<NameDTO>>() {})) {
-                if (element.fork().equals("false")) {
-                    String result = getResponse(env.getProperty("data.gitHubApi.url")
-                            + env.getProperty("data.gitHubApi.repos")
-                            + "/"
-                            + element.owner().login()
-                            + "/"
-                            + element.repositoryName()
-                            + env.getProperty("data.gitHubApi.branches"));
-                    processResult(result, element);
-                }
-            }
+            objectMapper.readValue(responseBody, new TypeReference<List<NameDTO>>() {})
+                    .stream()
+                    .filter(element -> "false".equals(element.fork()))
+                    .forEach(element -> {
+                        String result = getResponse(env.getProperty("data.gitHubApi.url")
+                                + env.getProperty("data.gitHubApi.repos")
+                                + "/"
+                                + element.owner().login()
+                                + "/"
+                                + element.repositoryName()
+                                + env.getProperty("data.gitHubApi.branches"));
+                        processResult(result, element);
+                    });
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -80,10 +81,9 @@ public class GitHubApiServiceImpl implements GitHubApiService {
     }
 
     private void createResponse(NameDTO element, List<BranchDTO> obj) {
-        Map<String, String> map = new HashMap<>();
-        for (BranchDTO branchDTO : obj) {
-            map.put(branchDTO.name(), branchDTO.commit().sha());
-        }
+        Map<String, String> map = obj.stream()
+                .collect(Collectors.toMap(BranchDTO::name, branchDTO -> branchDTO.commit().sha()));
+
         this.repoResponseData.add(new RepoResponseData(element.repositoryName(), element.owner().login(), map));
     }
 
