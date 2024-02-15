@@ -1,7 +1,7 @@
 package com.robertfranczak.Task.Controller;
 
 
-import com.robertfranczak.Task.Model.RepoResponseData;
+import com.robertfranczak.Task.Model.DTO.RepoResponseDataDTO;
 import com.robertfranczak.Task.Services.GitHubApiService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -18,10 +18,10 @@ public class GitHubAPIController {
 
     private final GitHubApiService gitHubApiService;
 
-    //Todo ----->  JSON Format:  Exceptionhandler : zmienic Magic numbers/Strings : Lista z branchami i SHA : dokumentacja : Testy
+    //Todo ----->  JSON Format: dokumentacja : Testy
 
     @GetMapping("/{username}")
-    public List<RepoResponseData> getGitHubUserDetails(
+    public List<RepoResponseDataDTO> getGitHubUserDetails(
             @PathVariable String username) {
         return gitHubApiService.getRepositoriesDetails(username);
     }

@@ -4,9 +4,10 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.robertfranczak.Task.Exceptions.NotFoundException;
 import com.robertfranczak.Task.Model.CompleteResponseData;
-import com.robertfranczak.Task.Model.DTO.BranchDTO;
+import com.robertfranczak.Task.Model.DTO.BranchRequestDTO;
 import com.robertfranczak.Task.Model.DTO.NameDTO;
-import com.robertfranczak.Task.Model.RepoResponseData;
+import com.robertfranczak.Task.Model.DTO.BranchDTO;
+import com.robertfranczak.Task.Model.DTO.RepoResponseDataDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.http.HttpEntity;
@@ -18,24 +19,23 @@ import org.springframework.web.client.RestTemplate;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 @Service
 public class GitHubApiServiceImpl implements GitHubApiService {
     @Autowired
     private Environment env;
-    private List<RepoResponseData> repoResponseData;
+    private List<RepoResponseDataDTO> repoResponseDatumDTOS;
     private final HttpHeaders headers = new HttpHeaders();
 
    public GitHubApiServiceImpl() {
        headers.add("User-Agent", "IReallyWantThisJob");
        headers.add("Accept", "application/json");
+
    }
    @Override
-    public  List<RepoResponseData> getRepositoriesDetails(String username) {
-       repoResponseData = new ArrayList<>();
-        CompleteResponseData completeResponseData = new CompleteResponseData(repoResponseData);
+    public  List<RepoResponseDataDTO> getRepositoriesDetails(String username) {
+       repoResponseDatumDTOS = new ArrayList<>();
+        CompleteResponseData completeResponseData = new CompleteResponseData(repoResponseDatumDTOS);
         try {
             String responseBody = getResponse(
                     env.getProperty("data.gitHubApi.url")
@@ -46,7 +46,7 @@ public class GitHubApiServiceImpl implements GitHubApiService {
         } catch (Exception e) {
             throw new NotFoundException(e.getMessage());
         }
-        return completeResponseData.repoResponseData();
+        return completeResponseData.repoResponseDatumDTOS();
     }
 
     private void fetchBranchesAndSHA(String responseBody) {
@@ -73,18 +73,19 @@ public class GitHubApiServiceImpl implements GitHubApiService {
     private void processResult(String result, NameDTO element) {
         try {
             ObjectMapper objectMapper = new ObjectMapper();
-            List<BranchDTO> obj = objectMapper.readValue(result, new TypeReference<>() {});
+            List<BranchRequestDTO> obj = objectMapper.readValue(result, new TypeReference<>() {});
             createResponse(element, obj);
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    private void createResponse(NameDTO element, List<BranchDTO> obj) {
-        Map<String, String> map = obj.stream()
-                .collect(Collectors.toMap(BranchDTO::name, branchDTO -> branchDTO.commit().sha()));
-
-        this.repoResponseData.add(new RepoResponseData(element.repositoryName(), element.owner().login(), map));
+    private void createResponse(NameDTO element, List<BranchRequestDTO> obj) {
+        List<BranchDTO> tmp = new ArrayList<>();
+        obj.forEach(ele -> {
+                    tmp.add(new BranchDTO(ele.name(),ele.commit().sha()));
+                });
+        this.repoResponseDatumDTOS.add(new RepoResponseDataDTO(element.repositoryName(), element.owner().login(), tmp));
     }
 
     private String getResponse(String apiCall) {
