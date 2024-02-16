@@ -6,12 +6,7 @@ import org.springframework.http.HttpStatus;
 
 import java.util.HashMap;
 import java.util.Map;
-/**
- * ExceptionConverter is a utility class responsible for converting exceptions
- * into appropriate HTTP status codes and error messages.
- * This class provides methods to handle exception messages and generate
- * JSON error responses.
- */
+
 @Getter
 @AllArgsConstructor
 public class ExceptionConverter {
