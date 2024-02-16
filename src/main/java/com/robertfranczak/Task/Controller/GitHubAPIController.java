@@ -19,14 +19,6 @@ import java.util.List;
 public class GitHubAPIController {
 
     private final GitHubApiService gitHubApiService;
-
-    /**
-     * Get GitHub repository details about particular user.
-     *
-     * @param username GitHub username
-     * @return List of repository details for the given user representing by RepoResponseDataDTO.
-     * @throws NotAcceptableHeader if header is not application/json
-     */
     @GetMapping(value = "/{username}", produces = MediaType.APPLICATION_JSON_VALUE)
     public List<RepoResponseDataDTO> getGitHubUserDetails(@PathVariable String username, @RequestHeader(value = "Accept") String acceptHeader) {
         if (acceptHeader.contains(MediaType.APPLICATION_JSON_VALUE)) {

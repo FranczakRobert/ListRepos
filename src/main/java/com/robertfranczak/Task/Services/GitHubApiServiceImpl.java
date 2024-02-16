@@ -21,10 +21,6 @@ import org.springframework.web.client.RestTemplate;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * GitHubApiServiceImpl is a service class implementing the GitHubApiService interface.
- * It is responsible for retrieving repository details from the GitHub API.
- */
 @Service
 public class GitHubApiServiceImpl implements GitHubApiService {
     @Autowired
@@ -32,22 +28,12 @@ public class GitHubApiServiceImpl implements GitHubApiService {
     private List<RepoResponseDataDTO> repoResponseDatumDTOS;
     private final HttpHeaders headers;
 
-    /**
-     * Constructs a new GitHubApiServiceImpl and sets up the necessary HTTP headers.
-     */
    public GitHubApiServiceImpl() {
        headers = new HttpHeaders();
        headers.add(Constants.HEADER_AGENT, Constants.HEADER_AGENT_VALUE);
        headers.add(Constants.HEADER_ACCEPT, Constants.HEADER_VALUE_JSON);
    }
 
-    /**
-     * Retrieves details of repositories for a given GitHub user.
-     *
-     * @param username The username of the GitHub user whose repositories details are to be retrieved.
-     * @return A list of RepoResponseDataDTO objects representing the repositories details.
-     * @throws NotFoundException if an error occurs during the retrieval process.
-     */
    @Override
     public  List<RepoResponseDataDTO> getRepositoriesDetails(String username) {
        repoResponseDatumDTOS = new ArrayList<>();
@@ -65,11 +51,6 @@ public class GitHubApiServiceImpl implements GitHubApiService {
         return completeResponseData.repoResponseDatumDTOS();
     }
 
-    /**
-     * Fetches branch details and corresponding commit SHAs for each repository.
-     *
-     * @param responseBody The response body containing repository details in JSON format.
-     */
     private void fetchBranchesAndSHA(String responseBody) {
         ObjectMapper objectMapper = new ObjectMapper();
         try {
@@ -92,7 +73,6 @@ public class GitHubApiServiceImpl implements GitHubApiService {
         }
     }
 
-
     private String getResponse(String apiCall) {
         HttpEntity<String> request = new HttpEntity<>(Constants.HEADER_PARAM, headers);
         RestTemplate rest = new RestTemplate();
@@ -104,12 +84,6 @@ public class GitHubApiServiceImpl implements GitHubApiService {
         return responseEntity.getBody();
     }
 
-    /**
-     * Processes the result of fetching branch details and creates the response data.
-     *
-     * @param result The response containing branch details in JSON format.
-     * @param element The repository details represented by NameDTO.
-     */
     private void processResult(String result, NameDTO element) {
         try {
             ObjectMapper objectMapper = new ObjectMapper();
@@ -120,11 +94,6 @@ public class GitHubApiServiceImpl implements GitHubApiService {
         }
     }
 
-    /**
-     * Creates the response data containing repository name, owner login, and branch details, representing by RepoResponseDataDTO
-     * @param element The repository details.
-     * @param branchRequestDTO The list of branch details.
-     */
     private void createResponse(NameDTO element, List<BranchRequestDTO> branchRequestDTO) {
         List<BranchDTO> branchDTOList = new ArrayList<>();
         branchRequestDTO.forEach(ele -> {

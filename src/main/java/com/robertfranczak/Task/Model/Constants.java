@@ -1,9 +1,4 @@
 package com.robertfranczak.Task.Model;
-
-
-/**
- * Constants is a DTO Object stores the strings values used in API.
- */
 public class Constants {
     public static final String HEADER_AGENT ="User-Agent";
     public static final String HEADER_PARAM ="parameters";
