@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.robertfranczak.Task.Exceptions.NotFoundException;
 import com.robertfranczak.Task.Model.CompleteResponseData;
+import com.robertfranczak.Task.Model.Constants;
 import com.robertfranczak.Task.Model.DTO.BranchRequestDTO;
 import com.robertfranczak.Task.Model.DTO.NameDTO;
 import com.robertfranczak.Task.Model.DTO.BranchDTO;
@@ -36,8 +37,8 @@ public class GitHubApiServiceImpl implements GitHubApiService {
      */
    public GitHubApiServiceImpl() {
        headers = new HttpHeaders();
-       headers.add("User-Agent", "IReallyWantThisJob");
-       headers.add("Accept", "application/json");
+       headers.add(Constants.HEADER_AGENT, Constants.HEADER_AGENT_VALUE);
+       headers.add(Constants.HEADER_ACCEPT, Constants.HEADER_VALUE_JSON);
    }
 
     /**
@@ -53,9 +54,9 @@ public class GitHubApiServiceImpl implements GitHubApiService {
         CompleteResponseData completeResponseData = new CompleteResponseData(repoResponseDatumDTOS);
         try {
             String responseBody = getResponse(
-                    env.getProperty("data.gitHubApi.url")
-                    + env.getProperty("data.gitHubApi.users")
-                    + username + env.getProperty("data.gitHubApi.repos"));
+                    env.getProperty(Constants.API_URL)
+                    + env.getProperty(Constants.API_USER)
+                    + username + env.getProperty(Constants.API_REPOS));
 
             fetchBranchesAndSHA(responseBody);
         } catch (Exception e) {
@@ -76,13 +77,13 @@ public class GitHubApiServiceImpl implements GitHubApiService {
                     .stream()
                     .filter(element -> "false".equals(element.fork()))
                     .forEach(element -> {
-                        String result = getResponse(env.getProperty("data.gitHubApi.url")
-                                + env.getProperty("data.gitHubApi.repos")
+                        String result = getResponse(env.getProperty(Constants.API_URL)
+                                + env.getProperty(Constants.API_REPOS)
                                 + "/"
                                 + element.owner().login()
                                 + "/"
                                 + element.repositoryName()
-                                + env.getProperty("data.gitHubApi.branches"));
+                                + env.getProperty(Constants.API_BRANCH));
                         processResult(result, element);
                     });
 
@@ -93,7 +94,7 @@ public class GitHubApiServiceImpl implements GitHubApiService {
 
 
     private String getResponse(String apiCall) {
-        HttpEntity<String> request = new HttpEntity<>("parameters", headers);
+        HttpEntity<String> request = new HttpEntity<>(Constants.HEADER_PARAM, headers);
         RestTemplate rest = new RestTemplate();
         ResponseEntity<String> responseEntity = rest.exchange(
                 apiCall,
