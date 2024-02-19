@@ -1,12 +1,13 @@
 package com.robertfranczak.Task.Controller;
 
 
-import com.robertfranczak.Task.Exceptions.NotAcceptableHeader;
-import com.robertfranczak.Task.Model.DTO.RepoResponseDataDTO;
+import com.robertfranczak.Task.Model.DTO.Response.RepoResponseDataDTO;
 import com.robertfranczak.Task.Services.GitHubApiService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
@@ -16,12 +17,9 @@ import java.util.List;
 public class GitHubAPIController {
 
     private final GitHubApiService gitHubApiService;
-    @GetMapping(value = "/{username}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public List<RepoResponseDataDTO> getGitHubUserDetails(@PathVariable String username, @RequestHeader(value = "Accept") String acceptHeader) {
-        if (acceptHeader.contains(MediaType.APPLICATION_JSON_VALUE)) {
-            return gitHubApiService.getRepositoriesDetails(username);
-        } else {
-            throw new NotAcceptableHeader("Not Acceptable Header");
-        }
+    @GetMapping(value = "/{username}")
+    public List<RepoResponseDataDTO> getGitHubUserDetails(@PathVariable String username) {
+
+        return gitHubApiService.getRepositoriesDetails(username);
     }
 }

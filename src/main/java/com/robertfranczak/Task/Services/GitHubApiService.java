@@ -1,6 +1,6 @@
 package com.robertfranczak.Task.Services;
 
-import com.robertfranczak.Task.Model.DTO.RepoResponseDataDTO;
+import com.robertfranczak.Task.Model.DTO.Response.RepoResponseDataDTO;
 
 import java.util.List;
 

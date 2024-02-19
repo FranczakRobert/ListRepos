@@ -1,4 +1,4 @@
-package com.robertfranczak.Task.Model.DTO;
+package com.robertfranczak.Task.Model.DTO.Response;
 
 import java.util.List;
 

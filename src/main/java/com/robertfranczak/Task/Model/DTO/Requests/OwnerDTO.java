@@ -1,8 +1,7 @@
-package com.robertfranczak.Task.Model.DTO;
+package com.robertfranczak.Task.Model.DTO.Requests;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 @JsonIgnoreProperties(ignoreUnknown = true)
-public record BranchDTO(
-        String name,
-       String lastSha
+public record OwnerDTO(
+        String login
 ){}
