@@ -13,16 +13,6 @@ public class ExceptionConverter {
     private HttpStatus status;
     private String message;
 
-    public void createNotFoundMsg() {
-            String errorMessage = message.substring(message.indexOf("message\":\"") + 10);
-            errorMessage = errorMessage.substring(0, errorMessage.indexOf("\""));
-            message = errorMessage;
-    }
-
-    public void createNotAcceptableHeader() {
-        message = "NotAcceptableHeader";
-    }
-
     public Map<String,String> errorResponseJSON() {
         Map<String,String> map = new HashMap<>();
         map.put("message",message);
