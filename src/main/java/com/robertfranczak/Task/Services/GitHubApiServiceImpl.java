@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
+import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -36,7 +37,7 @@ public class GitHubApiServiceImpl implements GitHubApiService {
                    .uri(Constants.API_USER + "/{username}" + Constants.API_REPOS , username)
                    .accept(MediaType.APPLICATION_JSON)
                    .retrieve()
-                   .onStatus(httpStatusCode -> httpStatusCode.value() == HttpStatus.NOT_FOUND.value(),
+                   .onStatus(httpStatusCode -> httpStatusCode == HttpStatus.NOT_FOUND,
                            error -> Mono.error(new NotFoundException("Not Found")))
                    .toEntityList(NameDTO.class);
 
@@ -48,20 +49,23 @@ public class GitHubApiServiceImpl implements GitHubApiService {
    }
 
    private void getBranchDetails(List<NameDTO> repositories) {
-
        WebClient webClient = Constants.webClient;
-       for (NameDTO element : repositories) {
-           if(element.fork().equals("false")) {
-               Mono<ResponseEntity<List<BranchRequestDTO>>> repositoriesDetails =
-                       webClient.get()
-                               .uri(Constants.API_REPOS + "/{username}/{repositoryName}" + Constants.API_BRANCH,element.owner().login(),element.repositoryName())
-                               .accept(MediaType.APPLICATION_JSON)
-                               .retrieve()
-                               .toEntityList(BranchRequestDTO.class);
 
-               constructFinalOutput(element, Objects.requireNonNull(Objects.requireNonNull(repositoriesDetails.block()).getBody()));
-           }
-       }
+       repositories.stream()
+               .filter(element -> element.fork().equals("false"))
+               .map(element -> {
+                   Mono<ResponseEntity<List<BranchRequestDTO>>> repositoriesDetails =
+                           webClient.get()
+                                   .uri(Constants.API_REPOS + "/{username}/{repositoryName}" + Constants.API_BRANCH, element.owner().login(), element.repositoryName())
+                                   .accept(MediaType.APPLICATION_JSON)
+                                   .retrieve()
+                                   .toEntityList(BranchRequestDTO.class);
+
+                   return new AbstractMap.SimpleEntry<>(element, repositoriesDetails.block());
+               })
+               .filter(entry -> entry.getValue() != null)
+               .forEach(entry -> constructFinalOutput(entry.getKey(), Objects.requireNonNull(Objects.requireNonNull(entry.getValue()).getBody())));
+
    }
 
    private void constructFinalOutput(NameDTO repositoryDetails, List<BranchRequestDTO> branchDetails) {
