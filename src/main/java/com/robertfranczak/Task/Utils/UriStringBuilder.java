@@ -4,5 +4,5 @@ import lombok.Builder;
 
 @Builder
 public class UriStringBuilder {
-    public final String uri;
+    public final static StringBuilder builder = new StringBuilder();
 }

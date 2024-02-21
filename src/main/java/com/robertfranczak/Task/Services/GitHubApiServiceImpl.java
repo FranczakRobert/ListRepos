@@ -4,6 +4,7 @@ import com.robertfranczak.Task.Exceptions.NotFoundException;
 import com.robertfranczak.Task.Model.Constants;
 import com.robertfranczak.Task.Model.DTO.Requests.BranchRequestDTO;
 import com.robertfranczak.Task.Model.DTO.Requests.NameDTO;
+import com.robertfranczak.Task.Utils.UriStringBuilder;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -27,14 +28,16 @@ public class GitHubApiServiceImpl implements GitHubApiService {
    @Override
     public  Map<NameDTO, ResponseEntity<List<BranchRequestDTO>>> getRepositoriesDetails(String username) {
        WebClient webClient = this.webClient;
-
        try {
-           Mono<ResponseEntity<List<NameDTO>>> result = retrieveEntityList(webClient,Constants.API_USER + "/" + username + Constants.API_REPOS, NameDTO.class);
+           UriStringBuilder.builder.append(Constants.API_USER + "/").append(username).append(Constants.API_REPOS);
+           Mono<ResponseEntity<List<NameDTO>>> result = retrieveEntityList(webClient,UriStringBuilder.builder.toString(), NameDTO.class);
 
            Map<NameDTO, ResponseEntity<List<BranchRequestDTO>>> resultMap = result.block().getBody().stream()
                    .filter(element -> element.fork().equals("false"))
                    .map(element -> {
-                       Mono<ResponseEntity<List<BranchRequestDTO>>> repositoriesDetails = retrieveEntityList(webClient,Constants.API_REPOS + "/" +element.owner().login() + "/" + element.repositoryName() + Constants.API_BRANCH,BranchRequestDTO.class);
+                       UriStringBuilder.builder.delete(0, UriStringBuilder.builder.length());
+                       UriStringBuilder.builder.append(Constants.API_REPOS + "/").append(element.owner().login()).append("/").append(element.repositoryName()).append(Constants.API_BRANCH);
+                       Mono<ResponseEntity<List<BranchRequestDTO>>> repositoriesDetails = retrieveEntityList(webClient,UriStringBuilder.builder.toString(), BranchRequestDTO.class);
                        return new AbstractMap.SimpleEntry<>(element, repositoriesDetails.block());
                    })
                    .collect(Collectors.toMap(entry -> entry.getKey(), entry -> entry.getValue()));
@@ -42,10 +45,7 @@ public class GitHubApiServiceImpl implements GitHubApiService {
            return resultMap;
        } catch (NotFoundException e) {
            throw new NotFoundException(e.getMessage());
-       } catch (NullPointerException e) {
-           e.getMessage();
        }
-       return null;
    }
 
     private <T> Mono<ResponseEntity<List<T>>> retrieveEntityList(WebClient webClient, String uri, Class<T> responseType) {
