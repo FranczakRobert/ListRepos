@@ -26,30 +26,26 @@ public class GitHubApiServiceImpl implements GitHubApiService {
 
    @Override
     public  Map<NameDTO, ResponseEntity<List<BranchRequestDTO>>> getRepositoriesDetails(String username) {
-       return getListOfRepositories(username);
-   }
+       WebClient webClient = this.webClient;
 
-    private  Map<NameDTO, ResponseEntity<List<BranchRequestDTO>>> getListOfRepositories(String username) {
-        WebClient webClient = this.webClient;
+       try {
+           Mono<ResponseEntity<List<NameDTO>>> result = retrieveEntityList(webClient,Constants.API_USER + "/" + username + Constants.API_REPOS, NameDTO.class);
 
-        try {
-            Mono<ResponseEntity<List<NameDTO>>> result = retrieveEntityList(webClient,Constants.API_USER + "/" + username + Constants.API_REPOS, NameDTO.class);
+           Map<NameDTO, ResponseEntity<List<BranchRequestDTO>>> resultMap = result.block().getBody().stream()
+                   .filter(element -> element.fork().equals("false"))
+                   .map(element -> {
+                       Mono<ResponseEntity<List<BranchRequestDTO>>> repositoriesDetails = retrieveEntityList(webClient,Constants.API_REPOS + "/" +element.owner().login() + "/" + element.repositoryName() + Constants.API_BRANCH,BranchRequestDTO.class);
+                       return new AbstractMap.SimpleEntry<>(element, repositoriesDetails.block());
+                   })
+                   .collect(Collectors.toMap(entry -> entry.getKey(), entry -> entry.getValue()));
 
-            Map<NameDTO, ResponseEntity<List<BranchRequestDTO>>> resultMap = result.block().getBody().stream()
-                    .filter(element -> element.fork().equals("false"))
-                    .map(element -> {
-                        Mono<ResponseEntity<List<BranchRequestDTO>>> repositoriesDetails = retrieveEntityList(webClient,Constants.API_REPOS + "/" +element.owner().login() + "/" + element.repositoryName() + Constants.API_BRANCH,BranchRequestDTO.class);
-                        return new AbstractMap.SimpleEntry<>(element, repositoriesDetails.block());
-                    })
-                    .collect(Collectors.toMap(entry -> entry.getKey(), entry -> entry.getValue()));
-
-            return resultMap;
-        } catch (NotFoundException e) {
-            throw new NotFoundException(e.getMessage());
-        } catch (NullPointerException e) {
-            e.getMessage();
-        }
-        return null;
+           return resultMap;
+       } catch (NotFoundException e) {
+           throw new NotFoundException(e.getMessage());
+       } catch (NullPointerException e) {
+           e.getMessage();
+       }
+       return null;
    }
 
     private <T> Mono<ResponseEntity<List<T>>> retrieveEntityList(WebClient webClient, String uri, Class<T> responseType) {
