@@ -19,12 +19,13 @@ public class ResponseCreatorServiceImpl implements ResponseCreatorService {
     public List<RepoResponseDataDTO> createResponse(Map<NameDTO, ResponseEntity<List<BranchRequestDTO>>> map) {
         responseDTO = new ArrayList<>();
 
-        for(Map.Entry<NameDTO,ResponseEntity<List<BranchRequestDTO>>> record : map.entrySet()) {
+        for(Map.Entry<NameDTO,ResponseEntity<List<BranchRequestDTO>>> record : map.entrySet())
             packResponse(record.getKey(), Objects.requireNonNull(record.getValue().getBody()));
-        }
+
         return responseDTO;
     }
 
+    //Todo POPRAWIC MAPOWANIE DO RECORDU
     @Override
     public void packResponse(NameDTO repositoryDetails, List<BranchRequestDTO> branchDetails) {
         List<BranchDTO> branchDTOList = new ArrayList<>();
