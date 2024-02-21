@@ -4,8 +4,7 @@ import com.robertfranczak.Task.Exceptions.NotFoundException;
 import com.robertfranczak.Task.Model.Constants;
 import com.robertfranczak.Task.Model.DTO.Requests.BranchRequestDTO;
 import com.robertfranczak.Task.Model.DTO.Requests.NameDTO;
-import com.robertfranczak.Task.Model.DTO.Response.BranchDTO;
-import com.robertfranczak.Task.Model.DTO.Response.RepoResponseDataDTO;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -14,44 +13,49 @@ import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
 import java.util.AbstractMap;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 @Service
 public class GitHubApiServiceImpl implements GitHubApiService {
-    private List<RepoResponseDataDTO> responseDTO;
+
+    private final WebClient webClient = WebClient.builder()
+            .defaultHeader(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE)
+            .baseUrl(Constants.API_BASE_URL)
+            .build();
 
    @Override
-    public List<RepoResponseDataDTO> getRepositoriesDetails(String username) {
-       responseDTO = new ArrayList<>();
-
-       getListOfRepositories(username);
-       return responseDTO;
+    public  Map<NameDTO, ResponseEntity<List<BranchRequestDTO>>> getRepositoriesDetails(String username) {
+       return getListOfRepositories(username);
    }
 
-   private void getListOfRepositories(String username) {
-       WebClient webClient = Constants.webClient;
-       try {
-           Mono<ResponseEntity<List<NameDTO>>> result = webClient.get()
-                   .uri(Constants.API_USER + "/{username}" + Constants.API_REPOS , username)
-                   .accept(MediaType.APPLICATION_JSON)
-                   .retrieve()
-                   .onStatus(httpStatusCode -> httpStatusCode == HttpStatus.NOT_FOUND,
-                           error -> Mono.error(new NotFoundException("Not Found")))
-                   .toEntityList(NameDTO.class);
+    private  Map<NameDTO, ResponseEntity<List<BranchRequestDTO>>> getListOfRepositories(String username) {
+        WebClient webClient = this.webClient;
+        try {
+            Mono<ResponseEntity<List<NameDTO>>> result = webClient.get()
+                    .uri(Constants.API_USER + "/{username}" + Constants.API_REPOS , username)
+                    .accept(MediaType.APPLICATION_JSON)
+                    .retrieve()
+                    .onStatus(httpStatusCode -> httpStatusCode == HttpStatus.NOT_FOUND,
+                            error -> Mono.error(new NotFoundException("Not Found")))
+                    .toEntityList(NameDTO.class);
 
-           List<NameDTO> response = Objects.requireNonNull(result.block()).getBody();
-           getBranchDetails(response);
-       } catch (NotFoundException e) {
+            List<NameDTO> response = Objects.requireNonNull(result.block()).getBody();
+            return getBranchDetails(response);
+        } catch (NotFoundException e) {
             throw new NotFoundException(e.getMessage());
-       }
+        } catch (NullPointerException e) {
+            e.getMessage();
+        }
+        return null;
    }
 
-   private void getBranchDetails(List<NameDTO> repositories) {
-       WebClient webClient = Constants.webClient;
+   private  Map<NameDTO, ResponseEntity<List<BranchRequestDTO>>> getBranchDetails(List<NameDTO> repositories) {
+       WebClient webClient = this.webClient;
 
-       repositories.stream()
+       Map<NameDTO, ResponseEntity<List<BranchRequestDTO>>> resultMap = repositories.stream()
                .filter(element -> element.fork().equals("false"))
                .map(element -> {
                    Mono<ResponseEntity<List<BranchRequestDTO>>> repositoriesDetails =
@@ -63,22 +67,9 @@ public class GitHubApiServiceImpl implements GitHubApiService {
 
                    return new AbstractMap.SimpleEntry<>(element, repositoriesDetails.block());
                })
-               .filter(entry -> entry.getValue() != null)
-               .forEach(entry -> constructFinalOutput(entry.getKey(), Objects.requireNonNull(Objects.requireNonNull(entry.getValue()).getBody())));
+               .collect(Collectors.toMap(entry -> entry.getKey(), entry -> entry.getValue()));
 
-   }
-
-   private void constructFinalOutput(NameDTO repositoryDetails, List<BranchRequestDTO> branchDetails) {
-       List<BranchDTO> branchDTOList = new ArrayList<>();
-       branchDetails.forEach(ele -> {
-           branchDTOList.add(new BranchDTO(ele.name(),ele.commit().sha()));
-       });
-
-       responseDTO.add(new RepoResponseDataDTO(
-               repositoryDetails.repositoryName(),
-               repositoryDetails.owner().login(),
-               branchDTOList
-               ));
+       return resultMap;
    }
 }
 
